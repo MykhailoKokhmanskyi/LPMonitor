@@ -13,7 +13,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.set('view engine', 'ejs');
-app.set('views', path.join(process.cwd(), 'views'))
+app.set('views', path.join(process.cwd(), 'src/views'))
 
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
