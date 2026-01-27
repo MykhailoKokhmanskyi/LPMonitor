@@ -1,0 +1,13 @@
+<%- contentFor('title') %>Реєстрація - LPMonitor
+<%- contentFor('body') %>
+<h1>Реєстрація акаунту LPMonitor</h1> 
+<% if(locals.submitted) { %>		
+	<div>
+		На вашу електронну пошту було надіслано лист з посиланням для закінчення реєстрації. Якщо ви не отримали лист, перевірте "спам" або спробуйте пізніше.
+	</div>
+<% } %>
+<form id="registrationForm" method="post">
+	<input type="email" name="email" id="emailInput" <% if(locals.email) { %>value="<%= locals.email %>"<% } %> placeholder="student@lpnu.ua" required minlength="8" pattern="[a-zA-Z0-9.]+@lpnu\.ua" title="Введіть адресу вашої коропоративної пошти lpnu.ua" />
+	<input disabled type="submit" id="submitButton" value="Зареєструватись" />
+</form>
+<script src="/js/auth-validation.js"></script>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title><%= defineContent('title') || 'LPMonitor' %></title>
+	</head>
+	<body>
+		<main>
+			<% if(locals.alerts) { %>
+				<div class="alert-container">
+					<% alerts.forEach(function(alert) { %>
+						<div>
+							<h3><%= alert.title %></h3>
+							<span><%= alert.msg %></span>
+							<button>x</button>
+						</div>
+					<% }); %>
+				</div>
+			<% } %>
+			<%- body %>
+		</main>
+	</body>
+</html>
