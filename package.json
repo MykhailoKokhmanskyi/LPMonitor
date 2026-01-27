@@ -7,18 +7,21 @@
   "type": "module",
   "main": "src/app.js",
   "scripts": {
-	"run": "node src/app.js",
-	"dev": "nodemon src/app.js",
+    "run": "node src/app.js",
+    "dev": "nodemon src/app.js",
     "test": "test"
   },
   "dependencies": {
+    "@types/node": "^25.0.10",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
     "express.js": "^1.0.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
-    "pg": "^8.17.2"
+    "pg": "^8.17.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@types/pg": "^8.16.0",
