@@ -5,10 +5,10 @@
   "license": "ISC",
   "author": "Mykhailo Kokhmanskyi",
   "type": "module",
-  "main": "src/app.js",
+  "main": "src/app.ts",
   "scripts": {
-    "run": "node src/app.js",
-    "dev": "nodemon src/app.js",
+    "run": "node src/app.ts",
+    "dev": "nodemon src/app.ts",
     "test": "test"
   },
   "dependencies": {
