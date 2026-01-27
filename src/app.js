@@ -3,8 +3,8 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 
-import authRoutes from './routes/auth.js';
-import userRoutes from './routes/users.js';
+//import authRoutes from './routes/auth.js';
+//import userRoutes from './routes/users.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,7 +18,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       "default-src": ["'self'"],
-      "script-src": ["'self'", "'trusted-scripts.com'"],
+      "script-src": ["'self'"],
       "object-src": ["'none'"],
       "upgrade-insecure-requests": [],
     },
@@ -28,8 +28,8 @@ app.use(helmet({
 app.use(express.json());
 app.use(express.static('public'));
 
-app.use('/auth', authRoutes);
-app.use('/api/users', userRoutes);
+//app.use('/auth', authRoutes);
+//app.use('/api/users', userRoutes);
 
 app.get('/', (req, res) => {
   res.send('<h1>Express SSR Server is Live</h1>');
