@@ -1,8 +1,12 @@
 {
 	"compilerOptions": {
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
 		"target": "ESNext",
 		"module": "NodeNext",
-		"moduleResolution": "NodeNext",
+		"moduleResolution": "bundler",
+		"allowImportingTsExtensions": true,
+		"noEmit": true,
 		"outDir": "./dist",
 		"rootDir": "./src",
 		"strict": true,
