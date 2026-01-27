@@ -31,4 +31,4 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            ~/app/update.sh
+            ~/update.sh
