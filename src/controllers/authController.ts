@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { addAlert } from '../utils/alertHelper.ts';
 import {verifyTurnstile} from '../utils/cfTurnstile.ts';
+import {sendRegistrationLink} from '../services/authController.ts';
 
 export const registerForm = (_req: Request, res: Response) => {
 	res.render('registerForm');
@@ -16,5 +17,5 @@ export const register = async (req: Request, res: Response) => {
 	}
 	res.render('registerForm', { email })
 	
-
+	sendRegistrationLink(email)
 }

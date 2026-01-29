@@ -12,6 +12,7 @@
     "test": "test"
   },
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.978.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/express-ejs-layouts": "^2.5.4",

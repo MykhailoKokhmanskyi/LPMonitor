@@ -1,4 +1,4 @@
-import { pgTable, serial, text, boolean, integer, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, boolean, integer, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 export const users = pgTable('users', {
@@ -9,7 +9,7 @@ export const users = pgTable('users', {
 })
 
 export const registration_invites = pgTable('registration_invites', {
-	uuid: text('uuid').primaryKey(),
+	invite_uuid: uuid('invite_uuid').primaryKey().defaultRandom(),
 	email: text('email').unique().notNull(),
 	expiresAt: timestamp('expiers_at').notNull().default(
 		sql`now() + interval '1 hour'`
