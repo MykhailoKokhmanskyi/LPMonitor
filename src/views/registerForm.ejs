@@ -1,4 +1,11 @@
 <%- contentFor('title') %>Реєстрація - LPMonitor
+<%- contentFor('head') %>
+<link rel="preconnect" href="https://challenges.cloudflare.com">
+<script
+  src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+  async
+  defer
+></script>
 <%- contentFor('body') %>
 <h1>Реєстрація акаунту LPMonitor</h1> 
 <% if(locals.submitted) { %>		
@@ -8,6 +15,7 @@
 <% } %>
 <form id="registrationForm" method="post">
 	<input type="email" name="email" id="emailInput" <% if(locals.email) { %>value="<%= locals.email %>"<% } %> placeholder="student@lpnu.ua" required minlength="8" pattern="[a-zA-Z0-9.]+@lpnu\.ua" title="Введіть адресу вашої коропоративної пошти lpnu.ua" />
+	<div class="cf-turnstile" data-sitekey="0x4AAAAAACVVH3qwJ7RFelkG"></div>
 	<input disabled type="submit" id="submitButton" value="Зареєструватись" />
 </form>
 <script src="/js/auth-validation.js"></script>
