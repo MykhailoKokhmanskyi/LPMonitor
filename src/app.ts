@@ -1,14 +1,15 @@
 import 'dotenv/config';
 import express from 'express';
-import helmet from 'helmet';
-import cors from 'cors';
 import path from 'path';
 import authRoutes from './routes/authRoutes.ts';
-import type { ErrorRequestHandler } from 'express';
 import expressLayouts from 'express-ejs-layouts';
-
-//import authRoutes from './routes/auth.js';
-//import userRoutes from './routes/users.js';
+import {helmetMiddleware} from './middleware/helmetMiddleware.ts';
+import {corsMiddleware} from './middleware/corsMiddleware.ts';
+import cookieParser from 'cookie-parser';
+import {errorHandlerMiddleware} from './middleware/errorHandlerMiddleware.ts';
+import csrf from 'csurf';
+import session from 'express-session';
+import flash from 'connect-flash';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,34 +29,26 @@ const cloudflareIPs = [
 
 app.set('trust proxy', cloudflareIPs);
 
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
-  credentials: true
-}));
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      "default-src": ["'self'"],
-      "script-src": ["'self'", "https://challenges.cloudflare.com"],
-      "object-src": ["'none'"],
-	  "frame-src": ["'self'", "https://challenges.cloudflare.com"],
-      "upgrade-insecure-requests": [],
-    },
-  },
-}));
+app.use(expressLayouts);
+app.use(cookieParser(process.env.CSRF_SECRET));
+app.use(corsMiddleware);
+app.use(helmetMiddleware);
 app.use(express.json());
 app.use(express.static('public'));
 app.use(express.urlencoded({extended: true}));
-app.use(expressLayouts);
+app.use(session({
+	secret: process.env.SESSION_SECRET!,
+	resave: false,
+	saveUninitialized: true,
+	cookie: { maxAge: 60000 },
+}))
+app.use(flash())
+app.use(csrf({ cookie: true }))
+app.use((req, res, next) => {res.locals.csrfToken = req.csrfToken(); next()})
 
 app.use('/auth', authRoutes)
 
-const errorHandler: ErrorRequestHandler = (err,_req,res,_next) => {
-	console.error("SERVER ERROR:", err.message)
-	const status = err.status || 500;
-	res.status(status).render('error', {'content_title': 'Помилка сервера', "message": "Сталась невідома помилка. Будь ласка спробуйте пізніше, або повідомте про проблему в телеграм-боті @lpmonitor_bot", 'status_code': 500})
-}
-app.use(errorHandler)
+app.use(errorHandlerMiddleware)
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
