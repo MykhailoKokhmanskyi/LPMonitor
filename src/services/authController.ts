@@ -60,3 +60,9 @@ export const sendRegistrationLink = async (email: string) => {
 		console.log(`Made an invite for ${email}, with URL ${url}`)
 	}
 }
+
+export const getInviteDetails = async (inviteUuid: string) => {
+	return await db.query.registration_invites.findFirst({
+		where: (registration_invites, { eq }) => eq(registration_invites.invite_uuid, inviteUuid)
+	})
+}

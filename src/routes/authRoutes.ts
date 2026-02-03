@@ -27,4 +27,6 @@ const registrationEmailRateLimiter = rateLimit({
 })
 router.post('/register', registrationIpRateLimiter, registrationEmailRateLimiter, authController.register);
 
+router.get('/register/:inviteUuid', authController.registerPasswordForm);
+router.post('/register/:inviteUuid', authController.registerPasswordSubmit);
 export default router;
