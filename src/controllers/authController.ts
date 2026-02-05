@@ -39,9 +39,12 @@ export const register = async (req: Request, res: Response) => {
 
 export const registerPasswordForm = async (req: Request, res: Response) => {
 	const inviteUuid = req.params['inviteUuid']
-	console.log(inviteUuid as string)
+	console.log(inviteUuid)
 	const inviteDetails = await getInviteDetails(inviteUuid as string)
 	console.log(inviteDetails)
+	if(inviteDetails && inviteDetails.expiresAt <= new Date()) {
+		return res.render('registrationInviteInvalid', { alerts: fetchAlerts(req) })
+	}
 	res.render('registerPasswordForm', { alerts: fetchAlerts(req) })
 }
 
