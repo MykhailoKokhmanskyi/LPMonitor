@@ -3,6 +3,8 @@ import {registration_invites} from "../db/schema.ts";
 import { sesClient } from "../aws/ses.ts";
 import { SendEmailCommand } from "@aws-sdk/client-ses";
 import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
+import {eq} from "drizzle-orm";
 
 export const checkPasswordValidity = (password: string) => {
 	const goodLength = password.length >= 8 && password.length <= 72
@@ -41,6 +43,16 @@ const generateInvite = async (email: string) => {
 		uuid_hash
 	}).returning()
 	return { row: res[0], uuid };
+}
+
+const deleteInvite = async (uuid_hash: string) => {
+	try {
+		await db.delete(registration_invites).where(eq(registration_invites.uuid_hash, uuid_hash))
+		return true
+	} catch(err) {
+		console.error(err)
+		return false
+	}
 }
 
 const sendEmail = async (email: string, url: string) => {
@@ -99,4 +111,11 @@ export const getInviteDetails = async (inviteUuid: string) => {
 	return await db.query.registration_invites.findFirst({
 		where: (registration_invites, { eq }) => eq(registration_invites.uuid_hash, uuid_hash)
 	})
+}
+
+export const createUser = async (inviteDetails: { email: string, uuid_hash: string, expiresAt: Date }, password: string) => {
+	await deleteInvite(inviteDetails.uuid_hash)
+	const saltRounds = 13;
+	const hash = await bcrypt.hash(password, saltRounds);
+	
 }

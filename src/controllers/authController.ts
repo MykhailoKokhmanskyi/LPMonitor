@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import {verifyTurnstile} from '../utils/cfTurnstile.ts';
-import {getInviteDetails, sendRegistrationLink, checkPasswordValidity} from '../services/authController.ts';
+import {createUser, getInviteDetails, sendRegistrationLink, checkPasswordValidity} from '../services/authController.ts';
 import {fetchAlerts} from '../utils/alertHelpter.ts';
 
 export const registerForm = (req: Request, res: Response) => {
@@ -74,7 +74,7 @@ export const registerPasswordSubmit = async (req: Request, res: Response) => {
 		return res.render('registraterPasswordForm', { alerts: fetchAlerts(req) })
 	}
 	
-	//createUser(inviteDetails, password)
+	createUser(inviteDetails, password)
 
 	req.flash('alerts', JSON.stringify({
 		title: 'Реєстрація успішна',
