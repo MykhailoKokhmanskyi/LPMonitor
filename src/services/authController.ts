@@ -2,12 +2,16 @@ import { db } from "../db/index.ts";
 import {registration_invites} from "../db/schema.ts";
 import { sesClient } from "../aws/ses.ts";
 import { SendEmailCommand } from "@aws-sdk/client-ses";
+import crypto from 'crypto';
 
 const generateInvite = async (email: string) => {
+	const uuid = crypto.randomUUID()
+	const uuid_hash = crypto.createHash('sha256').update(uuid).digest('hex')
 	const res = await db.insert(registration_invites).values({
-		email: email
+		email: email,
+		uuid_hash
 	}).returning()
-	return res[0];
+	return { row: res[0], uuid };
 }
 
 const sendEmail = async (email: string, url: string) => {
@@ -52,7 +56,7 @@ export const sendRegistrationLink = async (email: string) => {
 	const emailTaken = await isEmailTaken(email)
 	if(emailTaken) { return false }
 	const invite = await generateInvite(email)
-	const uuid = invite.invite_uuid
+	const uuid = invite.uuid
 	const url = `${process.env.APP_URL}/auth/register/${uuid}`
 	if(process.env.NODE_ENV === 'production') {
 		sendEmail(email, url)
@@ -62,7 +66,8 @@ export const sendRegistrationLink = async (email: string) => {
 }
 
 export const getInviteDetails = async (inviteUuid: string) => {
+	const uuid_hash = crypto.createHash('sha256').update(inviteUuid).digest('hex')
 	return await db.query.registration_invites.findFirst({
-		where: (registration_invites, { eq }) => eq(registration_invites.invite_uuid, inviteUuid)
+		where: (registration_invites, { eq }) => eq(registration_invites.uuid_hash, uuid_hash)
 	})
 }
