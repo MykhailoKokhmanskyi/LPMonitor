@@ -7,3 +7,4 @@ const handleInput = () => {
 }
 
 EmailInput.addEventListener('input', handleInput)
+handleInput()

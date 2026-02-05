@@ -4,6 +4,35 @@ import { sesClient } from "../aws/ses.ts";
 import { SendEmailCommand } from "@aws-sdk/client-ses";
 import crypto from 'crypto';
 
+export const checkPasswordValidity = (password: string) => {
+	const goodLength = password.length >= 8 && password.length <= 72
+
+	const uppercaseAlphabet = "QWERTYUIOPASDFGHJKLZXCVBNMЙЦУКЕНГШЩЗФІВАПРОЛДЯЧСМИТЬБЮ"
+	const numbers = "0123456789"
+
+	let containsUppercase = false;
+	let containsLowercase = false;
+	let containsNumbers = false;
+	for(let i = 0; i < password.length; i++) {
+		for(let c = 0; c < uppercaseAlphabet.length; c++) {
+			if(password.indexOf(uppercaseAlphabet[c]) != -1 && !containsUppercase) {
+				containsUppercase = true;
+			}
+			if(password.indexOf(uppercaseAlphabet[c].toLowerCase()) != -1 && !containsLowercase) {
+				containsLowercase = true;
+			}
+		}
+		for(let d = 0; d < numbers.length; d++) {
+			if(password.indexOf(numbers[d]) != -1) {
+				containsNumbers = true;
+				break
+			}
+		}
+	}
+	return goodLength && containsLowercase && containsUppercase && containsNumbers
+}
+
+
 const generateInvite = async (email: string) => {
 	const uuid = crypto.randomUUID()
 	const uuid_hash = crypto.createHash('sha256').update(uuid).digest('hex')
