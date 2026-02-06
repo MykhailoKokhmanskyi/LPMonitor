@@ -1,10 +1,11 @@
 import { db } from "../db/index.ts";
-import {registration_invites} from "../db/schema.ts";
+import {registration_invites, users} from "../db/schema.ts";
 import { sesClient } from "../aws/ses.ts";
 import { SendEmailCommand } from "@aws-sdk/client-ses";
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import {eq} from "drizzle-orm";
+import jsonwebtoken from 'jsonwebtoken';
 
 export const checkPasswordValidity = (password: string) => {
 	const goodLength = password.length >= 8 && password.length <= 72
@@ -118,4 +119,22 @@ export const createUser = async (inviteDetails: { email: string, uuid_hash: stri
 	const saltRounds = 13;
 	const hash = await bcrypt.hash(password, saltRounds);
 	
+	try {
+		const user = (await db.insert(users).values({
+			email: inviteDetails.email,
+			passwordHash: hash
+		}).returning())[0]
+		return { success: true, user }
+	} catch (err) {
+		console.error(err)
+		return { success: false }
+	}
+}
+
+export const generateToken = (user_id: string) => {
+	const payload = {
+		uuid: user_id,
+		jti: crypto.randomBytes(16).toString('hex')
+	}
+	return jsonwebtoken.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' })
 }

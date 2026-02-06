@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import {verifyTurnstile} from '../utils/cfTurnstile.ts';
-import {createUser, getInviteDetails, sendRegistrationLink, checkPasswordValidity} from '../services/authController.ts';
+import {createUser, getInviteDetails, sendRegistrationLink, checkPasswordValidity, generateToken} from '../services/authController.ts';
 import {fetchAlerts} from '../utils/alertHelpter.ts';
 
 export const registerForm = (req: Request, res: Response) => {
@@ -74,13 +74,30 @@ export const registerPasswordSubmit = async (req: Request, res: Response) => {
 		return res.render('registraterPasswordForm', { alerts: fetchAlerts(req) })
 	}
 	
-	createUser(inviteDetails, password)
+	const user = await createUser(inviteDetails, password)
+	if(user.success == false) {
+		req.flash('alerts', JSON.stringify({
+			title: 'Помилка',
+			type: 'warning',
+			msg: 'Сталась помилка під час створення акаунта! Будь ласка, спробуйте знову.'
+		}))
+		return res.redirect('/auth/register')
+	}
+	const token = generateToken(user.user!.id)
 
+	const expires = 7 * 24 * 60 * 60 * 1000
+	res.cookie('token', token, {
+		httpOnly: true,
+		secure: process.env.NODE_ENV === 'production',
+		sameSite: "lax",
+		signed: true,
+		maxAge: expires,
+	})
 	req.flash('alerts', JSON.stringify({
 		title: 'Реєстрація успішна',
 		type: 'success',
 		msg: 'Реєстрацію успішно завершено!'
 	}))
 	res.redirect('/')
-
+	
 }
