@@ -7,7 +7,7 @@ export const userMiddleware = async (req: Request, _res: Response, next: NextFun
 	const token = req.signedCookies['token']
 	const authorizationData = verifyToken(token) as TokenInformation
 
-	if(!authorizationData.provided) { return }
+	if(!authorizationData.provided) { next(); return }
 	req.tokenInformation = authorizationData
 	req.userInformation = await fetchUser(authorizationData.payload.uuid)
 	next()
