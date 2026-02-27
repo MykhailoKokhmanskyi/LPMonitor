@@ -6,6 +6,8 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import {eq} from "drizzle-orm";
 import jsonwebtoken from 'jsonwebtoken';
+import type {JwtPayload} from 'jsonwebtoken';
+import type {UserInformation} from "../types/auth.types.ts";
 
 export const checkPasswordValidity = (password: string) => {
 	const goodLength = password.length >= 8 && password.length <= 72
@@ -118,7 +120,7 @@ export const createUser = async (inviteDetails: { email: string, uuid_hash: stri
 	await deleteInvite(inviteDetails.uuid_hash)
 	const saltRounds = 13;
 	const hash = await bcrypt.hash(password, saltRounds);
-	
+		
 	try {
 		const user = (await db.insert(users).values({
 			email: inviteDetails.email,
@@ -136,5 +138,35 @@ export const generateToken = (user_id: string) => {
 		uuid: user_id,
 		jti: crypto.randomBytes(16).toString('hex')
 	}
-	return jsonwebtoken.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' })
+	return jsonwebtoken.sign(payload, process.env.JWT_SECRET!, { expiresIn: '7d' })
+}
+
+export const verifyToken = (token: string) => {
+	try {
+
+		const payload = jsonwebtoken.verify(token, process.env.JWT_SECRET!) as JwtPayload
+		if(typeof payload === "string") {
+			return { provided: false }
+		}
+		return { provided: true, payload: payload }
+	} catch {
+		return { provided: false }
+	}
+}
+
+export const fetchUser = async (uuid: string) => {
+	try {
+		const QueryResult = await db.query.users.findFirst({
+			where: (users, { eq }) => eq(users.id, uuid),
+			columns: {
+				id: true,
+				email: true,
+				createdAt: true
+			}
+		}) as UserInformation
+		return QueryResult ?? undefined
+	} catch(error) {
+		console.error(error)
+		return undefined
+	}
 }

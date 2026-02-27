@@ -10,6 +10,7 @@ import {errorHandlerMiddleware} from './middleware/errorHandlerMiddleware.ts';
 import csrf from 'csurf';
 import session from 'express-session';
 import flash from 'connect-flash';
+import {userMiddleware} from './middleware/userMiddleware.ts';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,6 +45,7 @@ app.use(session({
 }))
 app.use(flash())
 app.use(csrf({ cookie: true }))
+app.use(userMiddleware)
 app.use((req, res, next) => {res.locals.csrfToken = req.csrfToken(); next()})
 
 app.use('/auth', authRoutes)

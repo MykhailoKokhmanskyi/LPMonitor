@@ -33,6 +33,6 @@ export const problem_categories = pgTable('problem_categories', {
 
 export const problem_reports = pgTable('problem_reports', {
 	id: serial('id').primaryKey(),
-	authorId: integer('author_id').references(() => users.id),
+	authorId: uuid('author_id').references(() => users.id),
 	issueId: integer('problem_category_id').references(() => problem_categories.id),
 })

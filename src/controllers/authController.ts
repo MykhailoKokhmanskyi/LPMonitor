@@ -4,6 +4,7 @@ import {createUser, getInviteDetails, sendRegistrationLink, checkPasswordValidit
 import {fetchAlerts} from '../utils/alertHelpter.ts';
 
 export const registerForm = (req: Request, res: Response) => {
+	console.log(req.tokenInformation, req.userInformation)
 	res.render('registerForm', { alerts: fetchAlerts(req) });
 }
 
