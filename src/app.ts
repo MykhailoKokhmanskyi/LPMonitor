@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import path from 'path';
 import authRoutes from './routes/authRoutes.ts';
+import dashboardRoutes from './routes/dashboardRoutes.ts'
 import expressLayouts from 'express-ejs-layouts';
 import {helmetMiddleware} from './middleware/helmetMiddleware.ts';
 import {corsMiddleware} from './middleware/corsMiddleware.ts';
@@ -49,6 +50,7 @@ app.use(userMiddleware)
 app.use((req, res, next) => {res.locals.csrfToken = req.csrfToken(); next()})
 
 app.use('/auth', authRoutes)
+app.use('/', dashboardRoutes)
 
 app.use(errorHandlerMiddleware)
 
