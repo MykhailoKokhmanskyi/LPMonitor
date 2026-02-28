@@ -49,7 +49,7 @@ app.use(csrf({ cookie: true }))
 app.use(userMiddleware)
 app.use((req, res, next) => {res.locals.csrfToken = req.csrfToken(); next()})
 
-app.use('/auth', authRoutes)
+app.use('/', authRoutes)
 app.use('/', dashboardRoutes)
 
 app.use(errorHandlerMiddleware)
