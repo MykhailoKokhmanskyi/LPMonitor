@@ -170,3 +170,23 @@ export const fetchUser = async (uuid: string) => {
 		return undefined
 	}
 }
+
+export const verifyUserExistence = async (email: string, password: string) => {
+	try {
+		const queryResult = await db.query.users.findFirst({
+			where: (users, { eq }) => eq(users.email, email)
+		})
+		if(queryResult === undefined) {
+			//Run a dummy hash to prevent basic timing attacks
+			await bcrypt.compare(password, "$2a$13$wSkHvnpGrzegcXKiHkZLAOlmuyhW8ATa3XAQiBhGaApjLYG49EUCa")
+			return { success: true, exists: false, passwordValid: false, user: undefined }
+		}
+		
+		const isValid = await bcrypt.compare(password, queryResult.passwordHash)
+		
+		return { success: true, exists: true, passwordValid: isValid, user: isValid ? queryResult : undefined }
+	} catch(error) {
+		console.error(error)
+		return { success: false, exists: false, passwordValid: false, user: undefined }
+	}
+}
