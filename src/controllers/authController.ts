@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import {verifyTurnstile} from '../utils/cfTurnstile.ts';
-import {createUser, getInviteDetails, sendRegistrationLink, checkPasswordValidity, generateToken} from '../services/authController.ts';
+import {createUser, getInviteDetails, sendRegistrationLink, checkPasswordValidity, generateToken, verifyUserExistence} from '../services/authController.ts';
 import {fetchAlerts} from '../utils/alertHelpter.ts';
 
 export const registerForm = (req: Request, res: Response) => {
@@ -9,7 +9,7 @@ export const registerForm = (req: Request, res: Response) => {
 
 export const register = async (req: Request, res: Response) => {
 	const email = req.body.email
-	const email_regex = /[a-zA-Z0-9.]+@lpnu\.ua/
+	const email_regex = /^[a-zA-Z0-9.]+@lpnu\.ua$/
 	if(!email_regex.test(email)) {
 		req.flash('alerts', JSON.stringify({
 			title: 'Помилка',
@@ -34,7 +34,6 @@ export const register = async (req: Request, res: Response) => {
 		sendRegistrationLink(email)
 	}
 	res.render('registerForm', { email, alerts: fetchAlerts(req) })
-	
 }
 
 export const registerPasswordForm = async (req: Request, res: Response) => {
@@ -100,4 +99,51 @@ export const registerPasswordSubmit = async (req: Request, res: Response) => {
 	}))
 	res.redirect('/')
 	
+}
+
+export const loginForm = (req: Request, res: Response) => {
+	res.render('loginForm', { alerts: fetchAlerts(req) })
+}
+
+export const login = async (req: Request, res: Response) => {
+	const email = req.body.email
+	const password = req.body.password
+	const email_regex = /^[a-zA-Z0-9.]+@lpnu\.ua$/
+	if(!email_regex.test(email)) {
+		req.flash('alerts', JSON.stringify({
+			title: 'Помилка',
+			type: 'warning',
+			msg: 'Електронна адреса не відповідає формату! Вхід можливий лише з електронною адресою @lpnu.ua'
+		}))
+	}
+
+	const turnstile_valid = process.env.NODE_ENV === 'production' ? (await verifyTurnstile(req.body['cf-turnstile-response'], req.ip || "")).success : true;
+	if(!turnstile_valid) {
+		req.flash('alerts', JSON.stringify({
+			title: 'Помилка',
+			type: 'warning',
+			msg: 'Ви не пройшли перевірку! Будь ласка, спробуйте ще раз.'
+		}))
+	}
+
+	const userInfo = await verifyUserExistence(email, password)
+	if(!userInfo.success || !userInfo.exists || !userInfo.passwordValid) {
+		req.flash('alerts', JSON.stringify({
+			title: 'Помилка',
+			type: 'warning',
+			msg: 'Неправильна електронна адреса або пароль!'
+		}))
+		return res.render('loginForm', { alerts: fetchAlerts(req) })
+	}
+	const token = generateToken(userInfo.user!.id)
+
+	const expires = 7 * 24 * 60 * 60 * 1000
+	res.cookie('token', token, {
+		httpOnly: true,
+		secure: process.env.NODE_ENV === 'production',
+		sameSite: "lax",
+		signed: true,
+		maxAge: expires,
+	})
+	res.redirect("/")
 }

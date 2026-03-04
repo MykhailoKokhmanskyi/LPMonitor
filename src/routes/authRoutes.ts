@@ -29,4 +29,7 @@ router.post('/register', registrationIpRateLimiter, registrationEmailRateLimiter
 
 router.get('/register/:inviteUuid', authController.registerPasswordForm);
 router.post('/register/:inviteUuid', authController.registerPasswordSubmit);
+
+router.get('/login', authController.loginForm)
+router.post('/login', authController.login) //TODO: Add rate limiting
 export default router;

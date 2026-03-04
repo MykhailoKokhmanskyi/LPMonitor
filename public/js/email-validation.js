@@ -1,4 +1,4 @@
-const RegistrationForm = document.getElementById("registrationForm")
+const RegistrationForm = document.getElementById("authForm")
 const EmailInput = document.getElementById("emailInput")
 const SubmitButton = document.getElementById("submitButton")
 
