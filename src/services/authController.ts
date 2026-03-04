@@ -201,7 +201,7 @@ const generatePasswordReset = async (email: string) => {
 	return { row: res[0], uuid };
 }
 
-const deletePasswordReset = async (uuid_hash: string) => {
+export const deletePasswordReset = async (uuid_hash: string) => {
 	try {
 		await db.delete(password_reset_invites).where(eq(password_reset_invites.uuid_hash, uuid_hash))
 		return true
@@ -221,5 +221,32 @@ export const sendPasswordResetLink = async (email: string) => {
 		sendEmail(email, url)
 	} else {
 		console.log(`Made a reset for ${email}, with URL ${url}`)
+	}
+}
+
+export const getResetDetails = async (inviteUuid: string) => {
+	const uuid_hash = crypto.createHash('sha256').update(inviteUuid).digest('hex')
+	return await db.query.password_reset_invites.findFirst({
+		where: (password_reset_invites, { eq }) => eq(password_reset_invites.uuid_hash, uuid_hash)
+	})
+}
+
+export const updateUserPassword = async (email: string, newPassword: string) => {
+	const saltRounds = 13;
+	const hash = await bcrypt.hash(newPassword, saltRounds);
+	const user = await db.query.users.findFirst({
+		where: (users, { eq }) => eq(users.email, email)
+	})
+	if(!user) {
+		return { success: false };
+	}
+	try {
+		await db.update(users)
+			.set({ passwordHash: hash })
+			.where(eq(users.email, email))
+		return { success: true }
+	} catch(error) {
+		console.error(error)
+		return { success: false }
 	}
 }

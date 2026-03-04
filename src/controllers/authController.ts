@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import {verifyTurnstile} from '../utils/cfTurnstile.ts';
-import {createUser, getInviteDetails, sendRegistrationLink, checkPasswordValidity, generateToken, verifyUserExistence, sendPasswordResetLink} from '../services/authController.ts';
+import {deletePasswordReset, createUser, getInviteDetails, getResetDetails, sendRegistrationLink, checkPasswordValidity, generateToken, verifyUserExistence, sendPasswordResetLink, updateUserPassword} from '../services/authController.ts';
 import {fetchAlerts} from '../utils/alertHelpter.ts';
 
 export const registerForm = (req: Request, res: Response) => {
@@ -175,4 +175,48 @@ export const resetPassword = async (req: Request, res: Response) => {
 		sendPasswordResetLink(email)
 	}
 	res.render('resetPasswordForm', { alerts: fetchAlerts(req) })
+}
+
+export const resetPasswordSecondForm = async (req: Request, res: Response) => {
+	const resetUuid = req.params['resetUuid']
+	const resetDetails = await getResetDetails(resetUuid as string)
+	if(resetDetails === undefined || resetDetails.expiresAt <= new Date()) {
+		return res.redirect('/reset-password')
+	}
+	res.render('resetPasswordSecondForm', { alerts: fetchAlerts(req) })
+}
+
+export const resetPasswordSecond = async (req: Request, res: Response) => {
+	console.log("Got update post")
+	const resetUuid = req.params['resetUuid']
+	const resetDetails = await getResetDetails(resetUuid as string)
+	if(resetDetails === undefined || resetDetails.expiresAt <= new Date()) {
+		return res.redirect('/reset-password')
+	}
+	const newPassword = req.body.password
+	const passwordValid = checkPasswordValidity(newPassword)
+	if(!passwordValid) {
+		req.flash('alerts', JSON.stringify({
+			title: 'Помилка',
+			type: 'warning',
+			msg: 'Ваш пароль не відповідає вимогам! Пароль повинен містити не менше 8 не більше 72 символів, містити як мінімум одну малу букву, одну велику букву, одну цифру.'
+		}))
+		return res.render('resetPasswordSecondForm', { alerts: fetchAlerts(req) })
+	}
+	const updateResult = await updateUserPassword(resetDetails.email, newPassword)
+	if(updateResult.success == false) {
+		req.flash('alerts', JSON.stringify({
+			title: 'Помилка',
+			type: 'warning',
+			msg: 'Сталась невідома помилка під час оновлення пароля. Спробуйте ще раз пізніше!'
+		}))
+		return res.render('resetPasswordSecondForm', { alerts: fetchAlerts(req) })
+	}
+	deletePasswordReset(resetDetails.uuid_hash)
+	req.flash('alerts', JSON.stringify({
+		title: 'Скидання пароля',
+		type: 'success',
+		msg: 'Пароль успішно оновлено!'
+	}))
+	res.redirect('/login') //TODO: Implement a middleware check to invalidate tokens whose iat is older than the last password update.
 }
