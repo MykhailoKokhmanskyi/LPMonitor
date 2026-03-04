@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import {verifyTurnstile} from '../utils/cfTurnstile.ts';
-import {createUser, getInviteDetails, sendRegistrationLink, checkPasswordValidity, generateToken, verifyUserExistence} from '../services/authController.ts';
+import {deletePasswordReset, createUser, getInviteDetails, getResetDetails, sendRegistrationLink, checkPasswordValidity, generateToken, verifyUserExistence, sendPasswordResetLink, updateUserPassword} from '../services/authController.ts';
 import {fetchAlerts} from '../utils/alertHelpter.ts';
 
 export const registerForm = (req: Request, res: Response) => {
@@ -31,7 +31,7 @@ export const register = async (req: Request, res: Response) => {
 			type: 'success',
 			msg: 'На вашу електронну пошту було надіслано лист з посиланням для закінчення реєстрації. Якщо ви не отримали лист, первірте "спам" або спробуйте ще раз.'
 		}))
-		sendRegistrationLink(email)
+		sendRegistrationLink(email) // TODO: should probably check if the timing is equal for every outcome.
 	}
 	res.render('registerForm', { email, alerts: fetchAlerts(req) })
 }
@@ -151,4 +151,72 @@ export const login = async (req: Request, res: Response) => {
 export const logout = (_req: Request, res: Response) => {
 	res.clearCookie('token')
 	res.redirect('/login')
+}
+
+export const resetPasswordForm = (req: Request, res: Response) => {
+	res.render('resetPasswordForm', { alerts: fetchAlerts(req) })
+}
+
+export const resetPassword = async (req: Request, res: Response) => {
+	const email = req.body.email
+	const turnstile_valid = process.env.NODE_ENV === 'production' ? (await verifyTurnstile(req.body['cf-turnstile-response'], req.ip || "")).success : true;
+	if(!turnstile_valid) {
+		req.flash('alerts', JSON.stringify({
+			title: 'Помилка',
+			type: 'warning',
+			msg: 'Ви не пройшли перевірку! Будь ласка, спробуйте ще раз.'
+		}))
+	} else {
+		req.flash('alerts', JSON.stringify({
+			title: 'Cкидання пароля',
+			type: 'success',
+			msg: 'Якщо акаунт з такою електронною адресою існує, вам буде надіслано лист з посиланням для скидання пароля. Якщо ви не отримали лист, перевірте вкладку "спам" або спробуйте ще раз.'
+		}))
+		sendPasswordResetLink(email)
+	}
+	res.render('resetPasswordForm', { alerts: fetchAlerts(req) })
+}
+
+export const resetPasswordSecondForm = async (req: Request, res: Response) => {
+	const resetUuid = req.params['resetUuid']
+	const resetDetails = await getResetDetails(resetUuid as string)
+	if(resetDetails === undefined || resetDetails.expiresAt <= new Date()) {
+		return res.redirect('/reset-password')
+	}
+	res.render('resetPasswordSecondForm', { alerts: fetchAlerts(req) })
+}
+
+export const resetPasswordSecond = async (req: Request, res: Response) => {
+	console.log("Got update post")
+	const resetUuid = req.params['resetUuid']
+	const resetDetails = await getResetDetails(resetUuid as string)
+	if(resetDetails === undefined || resetDetails.expiresAt <= new Date()) {
+		return res.redirect('/reset-password')
+	}
+	const newPassword = req.body.password
+	const passwordValid = checkPasswordValidity(newPassword)
+	if(!passwordValid) {
+		req.flash('alerts', JSON.stringify({
+			title: 'Помилка',
+			type: 'warning',
+			msg: 'Ваш пароль не відповідає вимогам! Пароль повинен містити не менше 8 не більше 72 символів, містити як мінімум одну малу букву, одну велику букву, одну цифру.'
+		}))
+		return res.render('resetPasswordSecondForm', { alerts: fetchAlerts(req) })
+	}
+	const updateResult = await updateUserPassword(resetDetails.email, newPassword)
+	if(updateResult.success == false) {
+		req.flash('alerts', JSON.stringify({
+			title: 'Помилка',
+			type: 'warning',
+			msg: 'Сталась невідома помилка під час оновлення пароля. Спробуйте ще раз пізніше!'
+		}))
+		return res.render('resetPasswordSecondForm', { alerts: fetchAlerts(req) })
+	}
+	deletePasswordReset(resetDetails.uuid_hash)
+	req.flash('alerts', JSON.stringify({
+		title: 'Скидання пароля',
+		type: 'success',
+		msg: 'Пароль успішно оновлено!'
+	}))
+	res.redirect('/login') //TODO: Implement a middleware check to invalidate tokens whose iat is older than the last password update.
 }

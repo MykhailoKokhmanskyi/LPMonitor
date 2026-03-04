@@ -17,7 +17,7 @@ export const registration_invites = pgTable('registration_invites', {
 })
 
 export const password_reset_invites = pgTable('password_reset_invites', {
-	uuid: text('uuid').primaryKey(),
+	uuid_hash: text('uuid_hash').primaryKey(),
 	email: text('email').unique().notNull(),
 	expiresAt: timestamp('expires_at').notNull().default(
 		sql`now() + interval '1 hour'`

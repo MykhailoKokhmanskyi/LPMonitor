@@ -34,4 +34,11 @@ router.get('/login', authController.loginForm)
 router.post('/login', authController.login) //TODO: Add rate limiting
 
 router.post('/logout', authController.logout)
+
+router.get('/reset-password', authController.resetPasswordForm)
+router.post('/reset-password', authController.resetPassword) //TODO: Implement strict rate limiting
+
+router.get('/reset-password/:resetUuid', authController.resetPasswordSecondForm)
+router.post('/reset-password/:resetUuid', authController.resetPasswordSecond)
+
 export default router;
