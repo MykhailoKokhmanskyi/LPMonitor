@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import {verifyTurnstile} from '../utils/cfTurnstile.ts';
-import {createUser, getInviteDetails, sendRegistrationLink, checkPasswordValidity, generateToken, verifyUserExistence} from '../services/authController.ts';
+import {createUser, getInviteDetails, sendRegistrationLink, checkPasswordValidity, generateToken, verifyUserExistence, sendPasswordResetLink} from '../services/authController.ts';
 import {fetchAlerts} from '../utils/alertHelpter.ts';
 
 export const registerForm = (req: Request, res: Response) => {
@@ -31,7 +31,7 @@ export const register = async (req: Request, res: Response) => {
 			type: 'success',
 			msg: 'На вашу електронну пошту було надіслано лист з посиланням для закінчення реєстрації. Якщо ви не отримали лист, первірте "спам" або спробуйте ще раз.'
 		}))
-		sendRegistrationLink(email)
+		sendRegistrationLink(email) // TODO: should probably check if the timing is equal for every outcome.
 	}
 	res.render('registerForm', { email, alerts: fetchAlerts(req) })
 }
@@ -151,4 +151,28 @@ export const login = async (req: Request, res: Response) => {
 export const logout = (_req: Request, res: Response) => {
 	res.clearCookie('token')
 	res.redirect('/login')
+}
+
+export const resetPasswordForm = (req: Request, res: Response) => {
+	res.render('resetPasswordForm', { alerts: fetchAlerts(req) })
+}
+
+export const resetPassword = async (req: Request, res: Response) => {
+	const email = req.body.email
+	const turnstile_valid = process.env.NODE_ENV === 'production' ? (await verifyTurnstile(req.body['cf-turnstile-response'], req.ip || "")).success : true;
+	if(!turnstile_valid) {
+		req.flash('alerts', JSON.stringify({
+			title: 'Помилка',
+			type: 'warning',
+			msg: 'Ви не пройшли перевірку! Будь ласка, спробуйте ще раз.'
+		}))
+	} else {
+		req.flash('alerts', JSON.stringify({
+			title: 'Cкидання пароля',
+			type: 'success',
+			msg: 'Якщо акаунт з такою електронною адресою існує, вам буде надіслано лист з посиланням для скидання пароля. Якщо ви не отримали лист, перевірте вкладку "спам" або спробуйте ще раз.'
+		}))
+		sendPasswordResetLink(email)
+	}
+	res.render('resetPasswordForm', { alerts: fetchAlerts(req) })
 }

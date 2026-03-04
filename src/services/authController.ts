@@ -1,5 +1,5 @@
 import { db } from "../db/index.ts";
-import {registration_invites, users} from "../db/schema.ts";
+import {password_reset_invites, registration_invites, users} from "../db/schema.ts";
 import { sesClient } from "../aws/ses.ts";
 import { SendEmailCommand } from "@aws-sdk/client-ses";
 import crypto from 'crypto';
@@ -101,7 +101,7 @@ export const sendRegistrationLink = async (email: string) => {
 	if(emailTaken) { return false }
 	const invite = await generateInvite(email)
 	const uuid = invite.uuid
-	const url = `${process.env.APP_URL}/auth/register/${uuid}`
+	const url = `${process.env.APP_URL}/register/${uuid}`
 	if(process.env.NODE_ENV === 'production') {
 		sendEmail(email, url)
 	} else {
@@ -188,5 +188,38 @@ export const verifyUserExistence = async (email: string, password: string) => {
 	} catch(error) {
 		console.error(error)
 		return { success: false, exists: false, passwordValid: false, user: undefined }
+	}
+}
+
+const generatePasswordReset = async (email: string) => {
+	const uuid = crypto.randomUUID()
+	const uuid_hash = crypto.createHash('sha256').update(uuid).digest('hex')
+	const res = await db.insert(password_reset_invites).values({
+		email: email,
+		uuid_hash
+	}).returning()
+	return { row: res[0], uuid };
+}
+
+const deletePasswordReset = async (uuid_hash: string) => {
+	try {
+		await db.delete(password_reset_invites).where(eq(password_reset_invites.uuid_hash, uuid_hash))
+		return true
+	} catch(err) {
+		console.error(err)
+		return false
+	}
+}
+
+export const sendPasswordResetLink = async (email: string) => {
+	const emailTaken = await isEmailTaken(email)
+	if(!emailTaken) { return false }
+	const invite = await generatePasswordReset(email)
+	const uuid = invite.uuid
+	const url = `${process.env.APP_URL}/reset-password/${uuid}`
+	if(process.env.NODE_ENV === 'production') {
+		sendEmail(email, url)
+	} else {
+		console.log(`Made a reset for ${email}, with URL ${url}`)
 	}
 }
