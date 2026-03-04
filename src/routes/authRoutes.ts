@@ -32,4 +32,6 @@ router.post('/register/:inviteUuid', authController.registerPasswordSubmit);
 
 router.get('/login', authController.loginForm)
 router.post('/login', authController.login) //TODO: Add rate limiting
+
+router.post('/logout', authController.logout)
 export default router;

@@ -1,3 +1,7 @@
 <%- contentFor('title') %>Головна
 <%- contentFor('body') %>
 <h1>LPMonitor - Головна</h1>
+<form action="/logout" method="POST">
+	<input type="hidden" name="_csrf" value="<%= csrfToken %>">
+	<button type="submit">Вихід</button>
+</form>
