@@ -2,7 +2,6 @@ import type {Request, Response, NextFunction} from "express"
 import {verifyToken} from "../services/authController.ts"
 import type {TokenInformation} from "../types/auth.types.ts"
 import {fetchUser} from '../services/authController.ts'
-import {fetchAlerts} from "../utils/alertHelpter.ts"
 
 export const userMiddleware = async (req: Request, _res: Response, next: NextFunction) => {
 	const token = req.signedCookies['token']
@@ -16,7 +15,7 @@ export const userMiddleware = async (req: Request, _res: Response, next: NextFun
 
 export const ensureLoggedIn = (req: Request, res: Response, next: NextFunction) => {
 	if(req.tokenInformation == undefined || req.userInformation == undefined) {
-		res.status(403).render('forbidden', { alerts: fetchAlerts(req) })
+		res.redirect('/login')
 		return
 	}
 	next()
